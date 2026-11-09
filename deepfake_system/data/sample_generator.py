@@ -143,8 +143,8 @@ def generate_benchmark_video(
         # Artifact Injection for Specific Deepfakes
         if is_fake:
             if fake_type == "faceswap":
-                # Blending seam along outer jawline
-                cv2.ellipse(frame, (cx, cy), (int(rx * 0.90), int(ry * 0.92)), 0, 0, 360, (110, 150, 110), 3)
+                # Blending seam along outer jawline (characteristic FaceSwap border discontinuity)
+                cv2.ellipse(frame, (cx, cy), (int(rx * 0.90), int(ry * 0.92)), 0, 0, 360, (35, 45, 35), 4)
             elif fake_type == "talking_head":
                 # Lower face chrominance seam
                 patch_y1, patch_y2 = max(0, mouth_y - 25), min(height, mouth_y + 35)

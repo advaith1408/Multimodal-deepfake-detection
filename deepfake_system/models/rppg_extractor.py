@@ -24,13 +24,22 @@ class RPPGExtractor:
     """
 
     def __init__(self, fps: float = FPS_DEFAULT, method: str = "POS"):
-        self.fps = fps
+        self.fps = float(fps)
         self.method = method.upper()
-        # Build Butterworth bandpass filter coefficients
-        nyquist = 0.5 * self.fps
-        low = RPPG_LOW_FREQ / nyquist
-        high = min(RPPG_HIGH_FREQ / nyquist, 0.95)
+        self._init_filter()
+
+    def _init_filter(self):
+        """Builds Butterworth bandpass filter coefficients for the current fps."""
+        nyquist = 0.5 * max(self.fps, 1.0)
+        low = max(0.01, min(RPPG_LOW_FREQ / nyquist, 0.88))
+        high = max(low + 0.05, min(RPPG_HIGH_FREQ / nyquist, 0.95))
         self.b, self.a = signal.butter(FILTER_ORDER, [low, high], btype="bandpass")
+
+    def set_fps(self, fps: float):
+        """Dynamically adjusts filter parameters when input video frame rate varies."""
+        if fps > 0 and not np.isnan(fps):
+            self.fps = float(fps)
+            self._init_filter()
 
     def _pos_algorithm(self, rgb_series: np.ndarray) -> np.ndarray:
         """

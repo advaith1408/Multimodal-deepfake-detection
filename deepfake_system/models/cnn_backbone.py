@@ -31,8 +31,22 @@ class CNNSpatialExtractor(nn.Module):
                 nn.Dropout(p=0.3, inplace=True),
                 nn.Linear(in_features, num_classes)
             )
-            self.target_conv_layer = self.features[-1]  # features[8]
             self.feature_dim = in_features
+
+            # Automatically load FaceForensics++ C23 pretrained weights if available
+            ffpp_path = Path(__file__).resolve().parents[1] / "checkpoints" / "efficientnet_b0_ffpp_c23.pth"
+            if ffpp_path.exists():
+                try:
+                    state = torch.load(ffpp_path, map_location="cpu", weights_only=True)
+                    f_state = {k.replace("features.", ""): v for k, v in state.items() if k.startswith("features.")}
+                    c_state = {k.replace("classifier.", ""): v for k, v in state.items() if k.startswith("classifier.")}
+                    if f_state:
+                        self.features.load_state_dict(f_state, strict=False)
+                    if c_state:
+                        self.classifier.load_state_dict(c_state, strict=False)
+                    print(f"Loaded FaceForensics++ C23 weights into {backbone_name} backbone.", flush=True)
+                except Exception as e:
+                    print(f"Notice: Could not load FaceForensics++ weights: {e}", flush=True)
         elif backbone_name == "resnet50":
             base_model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT if pretrained else None)
             self.features = nn.Sequential(
@@ -45,10 +59,17 @@ class CNNSpatialExtractor(nn.Module):
                 nn.Dropout(p=0.3),
                 nn.Linear(in_features, num_classes)
             )
-            self.target_conv_layer = base_model.layer4[-1]
             self.feature_dim = in_features
         else:
             raise ValueError(f"Unsupported backbone: {backbone_name}")
+
+    @property
+    def target_conv_layer(self):
+        if self.backbone_name == "efficientnet_b0":
+            return self.features[-1]
+        elif self.backbone_name == "resnet50":
+            return self.features[-1][-1]
+        return self.features[-1]
 
     def forward_features(self, x: torch.Tensor) -> torch.Tensor:
         """

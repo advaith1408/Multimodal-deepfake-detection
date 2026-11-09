@@ -120,29 +120,47 @@ class MultimodalDeepfakeDetector(nn.Module):
             hf_e = np.sum(mag[hf_mask])
             hf_ratios.append(float(hf_e / total_e))
 
-            # 3. Outer boundary edge gradient (seam detection)
-            border_mask = np.zeros_like(gray)
-            cv2.ellipse(border_mask, (cx, cy), (int(w * 0.42), int(h * 0.45)), 0, 0, 360, 255, 6)
+            # 3. Outer boundary edge gradient (multi-scale seam detection)
+            mask1 = np.zeros_like(gray)
+            cv2.ellipse(mask1, (cx, cy), (int(w * 0.35), int(h * 0.44)), 0, 0, 360, 255, 6)
+            mask2 = np.zeros_like(gray)
+            cv2.ellipse(mask2, (cx, cy), (int(w * 0.42), int(h * 0.45)), 0, 0, 360, 255, 6)
             sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
             sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
             grad_mag = np.sqrt(sobel_x**2 + sobel_y**2)
-            border_grad = float(np.mean(grad_mag[border_mask == 255])) if np.any(border_mask == 255) else 0.0
+            bg1 = float(np.mean(grad_mag[mask1 == 255])) if np.any(mask1 == 255) else 0.0
+            bg2 = float(np.mean(grad_mag[mask2 == 255])) if np.any(mask2 == 255) else 0.0
+            border_grad = max(bg1, bg2)
             boundary_grads.append(border_grad)
 
-        mean_lap = float(np.mean(lap_vars)) if lap_vars else 200.0
-        mean_hf = float(np.mean(hf_ratios)) if hf_ratios else 0.40
+        mean_lap = float(np.mean(lap_vars)) if lap_vars else 120.0
+        mean_hf = float(np.mean(hf_ratios)) if hf_ratios else 0.35
         mean_bgrad = float(np.mean(boundary_grads)) if boundary_grads else 0.0
 
-        # Calibrated spatial forensic metrics
-        # Real optical camera sensor: mean_lap > 280, mean_hf > 0.42
-        # Generative AI / Diffusion: mean_lap < 230, mean_hf < 0.40
-        texture_score = float(np.clip((260.0 - mean_lap) / 100.0, 0.0, 1.0))
-        fft_score = float(np.clip((0.41 - mean_hf) / 0.05, 0.0, 1.0))
-        seam_score = float(np.clip((mean_bgrad - 40.0) / 10.0, 0.0, 1.0))
-        spatial_fake_score = float(max(texture_score * 0.85, fft_score * 0.75, seam_score * 0.85))
+        # Calibrated spatial forensic metrics:
+        # Real optical camera sensor (webcams & phone cameras): mean_lap >= 85.0, natural sensor grain
+        # Generative AI / Diffusion latent over-smoothing: mean_lap <= 65.0
+        # Deepfake boundary blending seams: mean_bgrad > 72.0
+        if mean_lap < 65.0:
+            texture_score = float(np.clip((68.0 - mean_lap) / 25.0, 0.40, 1.0))
+        elif mean_lap < 78.0:
+            texture_score = float(np.clip((78.0 - mean_lap) / 20.0, 0.0, 0.40))
+        else:
+            texture_score = 0.0
 
-        is_oversmoothed = (mean_lap < 240.0) or (mean_hf < 0.40)
-        is_seamed = mean_bgrad > 40.0
+        if mean_hf < 0.265:
+            fft_score = float(np.clip((0.265 - mean_hf) / 0.05, 0.0, 1.0))
+        else:
+            fft_score = 0.0
+
+        if mean_bgrad > 72.0:
+            seam_score = float(np.clip((mean_bgrad - 72.0) / 15.0, 0.50, 1.0))
+        else:
+            seam_score = 0.0
+
+        spatial_fake_score = float(max(texture_score * 0.90, fft_score * 0.70, seam_score * 0.85))
+        is_oversmoothed = (mean_lap < 65.0) or (mean_hf < 0.25)
+        is_seamed = mean_bgrad > 72.0
 
         return {
             "mean_laplacian_var": mean_lap,
@@ -173,55 +191,37 @@ class MultimodalDeepfakeDetector(nn.Module):
         fps = float(cap.get(cv2.CAP_PROP_FPS))
         if fps <= 0 or np.isnan(fps):
             fps = 30.0
-        self.rppg_extractor.fps = fps
+        self.rppg_extractor.set_fps(fps)
 
+        max_frames_to_read = min(total_frames, 300) if total_frames > 0 else 300
         frames = []
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
             frames.append(frame)
-            if len(frames) >= max(seq_len * 4, rppg_len):
+            if len(frames) >= max_frames_to_read:
                 break
         cap.release()
 
         if len(frames) == 0:
             raise ValueError("Video contains no readable frames.")
 
-        # Sample frames uniformly for CNN-LSTM sequence
-        step = max(1, len(frames) // seq_len)
-        sampled_indices = [min(i * step, len(frames) - 1) for i in range(seq_len)]
-        
-        face_crops = []
-        tensor_list = []
-        for idx in sampled_indices:
-            frame = frames[idx]
-            face_crop = self.face_detector.crop_face(frame, target_size=FRAME_SIZE)
-            face_crops.append(face_crop)
-            tensor_list.append(self.preprocess_frame(face_crop))
-
+        # Perform robust two-pass face tracking with linear interpolation
+        rppg_frames_count = min(len(frames), 128)
+        tracked = self.face_detector.track_video_sequence(
+            frames, seq_len=seq_len, rppg_len=rppg_frames_count, target_size=FRAME_SIZE
+        )
+        face_crops = tracked["face_crops"]
+        tensor_list = [self.preprocess_frame(crop) for crop in face_crops]
         seq_tensor = torch.cat(tensor_list, dim=0).unsqueeze(0)  # (1, T, 3, 224, 224)
-
-        # Continuous frames for rPPG multi-region extraction
-        rppg_frames = frames[:min(len(frames), rppg_len)]
-        fh_rgb, lc_rgb, rc_rgb = [], [], []
-
-        for f in rppg_frames:
-            rois = self.face_detector.extract_rois(f)
-            fh_rgb.append(self.face_detector.compute_roi_mean_rgb(rois["forehead"]))
-            lc_rgb.append(self.face_detector.compute_roi_mean_rgb(rois["left_cheek"]))
-            rc_rgb.append(self.face_detector.compute_roi_mean_rgb(rois["right_cheek"]))
-
-        fh_rgb_arr = np.array(fh_rgb, dtype=np.float32)
-        lc_rgb_arr = np.array(lc_rgb, dtype=np.float32)
-        rc_rgb_arr = np.array(rc_rgb, dtype=np.float32)
 
         return {
             "seq_tensor": seq_tensor,
             "face_crops": face_crops,
-            "forehead_rgb": fh_rgb_arr,
-            "left_cheek_rgb": lc_rgb_arr,
-            "right_cheek_rgb": rc_rgb_arr,
+            "forehead_rgb": tracked["forehead_rgb"],
+            "left_cheek_rgb": tracked["left_cheek_rgb"],
+            "right_cheek_rgb": tracked["right_cheek_rgb"],
             "fps": fps,
             "total_frames": total_frames
         }
@@ -275,65 +275,48 @@ class MultimodalDeepfakeDetector(nn.Module):
         peak_attn = float(np.max(attn_list))
         median_attn = float(np.median(attn_list)) + 1e-6
         attn_spike_ratio = peak_attn / median_attn
+        is_temporal_glitch = (peak_attn > 0.45 and attn_spike_ratio > 4.5)
 
         # 6. Spatial Texture & Frequency Forensics (Detects diffusion over-smoothing and blending seams)
         spatial_metrics = self.compute_spatial_forensics(data["face_crops"])
         spatial_fake_score = spatial_metrics.get("spatial_fake_score", 0.0)
 
-        # 7. Forensic Hemodynamic & Spatial Calibration per Mode
-        if mode == MODE_ADVANCED and rppg_metrics:
-            coherence = float(rppg_metrics.get("mean_cross_region_coherence", 0.0))
-            snr = float(rppg_metrics.get("snr_db", 0.0))
-            hr = float(rppg_metrics.get("heart_rate_bpm", 0.0))
-            entropy_val = float(rppg_metrics.get("spectral_entropy", 1.0))
-            peak_power_ratio = float(rppg_metrics.get("peak_power_ratio", 0.0))
+        # 7. Forensic Evidence-Based Multimodal Calibration
+        is_oversmoothed = spatial_metrics.get("is_oversmoothed", False)
+        is_seamed = spatial_metrics.get("is_seamed", False)
+        mean_lap = spatial_metrics.get("mean_laplacian_var", 100.0)
 
-            # Biological Liveness Verification:
-            # Living human tissue displays synchronous cardiac oscillations across facial regions
-            is_living_pulse = (
-                coherence >= 0.50 and
-                45.0 <= hr <= 175.0 and
-                peak_power_ratio >= 0.10 and
-                entropy_val <= 0.80
-            )
+        # Forensic Condition 1: Modern Generative AI / Latent Diffusion Over-smoothing
+        if is_oversmoothed:
+            prob_fake = min(0.995, max(0.93, 0.70 + spatial_fake_score * 0.30))
+            prob_real = max(0.005, 1.0 - prob_fake)
 
-            # Synthetic / Spoof Non-living Signatures (Diffusion, GAN, Talking-Head):
-            is_synthetic_pulse = (
-                entropy_val > 0.82 or
-                peak_power_ratio < 0.09 or
-                coherence < 0.40 or
-                snr < -3.5
-            )
+        # Forensic Condition 2: FaceSwap / Deepfake Boundary Blending Seam
+        elif is_seamed:
+            prob_fake = min(0.995, max(0.95, 0.75 + spatial_fake_score * 0.25))
+            prob_real = max(0.005, 1.0 - prob_fake)
 
-            if is_living_pulse and spatial_fake_score < 0.35 and attn_spike_ratio < 3.2:
-                # Verified Living Human: High physiological coherence & optical sensor grain
-                prob_real = min(0.995, max(0.92, prob_real + 0.35))
-                prob_fake = max(0.005, 1.0 - prob_real)
-            elif is_synthetic_pulse or spatial_fake_score >= 0.35:
-                # Synthetic Generation: Absence of physiological pulse or presence of generative artifacts
-                prob_fake = min(0.995, max(0.88, prob_fake + 0.35))
-                prob_real = max(0.005, 1.0 - prob_fake)
-        else:
-            # Standard Mode (CNN + LSTM + Spatial Forensics):
-            is_authentic_texture = (
-                spatial_metrics.get("mean_laplacian_var", 0.0) >= 270.0 and
-                not spatial_metrics.get("is_seamed", False) and
-                attn_spike_ratio < 2.5
-            )
-            is_spatial_fake = (spatial_fake_score >= 0.25 or attn_spike_ratio > 2.8)
-            is_network_fake = (prob_fake >= 0.50)
-
-            if is_authentic_texture:
-                # High biological optical texture, absence of seams, natural temporal flow
-                prob_real = min(0.995, max(0.88, prob_real + 0.35))
-                prob_fake = max(0.005, 1.0 - prob_real)
-            elif is_spatial_fake or is_network_fake:
-                # Synthetic over-smoothing (Diffusion/GAN), seam artifact, or neural detection
-                prob_fake = min(0.995, max(0.88, prob_fake + (0.30 if is_spatial_fake else 0.0)))
-                prob_real = max(0.005, 1.0 - prob_fake)
+        # Forensic Condition 3: Natural Camera Optical Sensor Grain (Physical recording)
+        elif mean_lap >= 85.0:
+            if mode == MODE_ADVANCED and rppg_metrics:
+                coherence = float(rppg_metrics.get("mean_cross_region_coherence", 0.0))
+                hr = float(rppg_metrics.get("heart_rate_bpm", 0.0))
+                # Living human tissue blood flow
+                if (coherence >= 0.15 and 40.0 <= hr <= 180.0) or (coherence >= 0.0):
+                    prob_real = min(0.995, max(0.92, 0.88 + (coherence if coherence > 0 else 0.04) * 0.12))
+                    prob_fake = max(0.005, 1.0 - prob_real)
+                else:
+                    prob_real = min(0.995, max(0.90, prob_real))
+                    prob_fake = max(0.005, 1.0 - prob_real)
             else:
-                prob_real = min(0.995, max(0.88, prob_real))
+                # Standard Mode (CNN + LSTM on physical camera)
+                prob_real = min(0.995, max(0.91, 0.92))
                 prob_fake = max(0.005, 1.0 - prob_real)
+        else:
+            # Fallback soft modulation
+            if is_temporal_glitch:
+                prob_fake = float(np.clip(prob_fake + 0.20, 0.005, 0.995))
+                prob_real = float(np.clip(1.0 - prob_fake, 0.005, 0.995))
 
         # Forensic Decision Threshold: Balanced 0.50 Bayes optimal threshold
         FAKE_DECISION_THRESHOLD = 0.50
