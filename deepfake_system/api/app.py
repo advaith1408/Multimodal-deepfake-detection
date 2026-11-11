@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 from pathlib import Path
 from typing import Optional, Tuple
-from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, Query, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -23,6 +23,9 @@ from deepfake_system.explainability.gradcam import GradCAMExplainer
 from deepfake_system.explainability.rppg_explainer import PhysiologicalExplainer
 from deepfake_system.explainability.report_generator import ForensicReportGenerator
 from deepfake_system.training.evaluate import ModelEvaluator
+from deepfake_system.api.rate_limit import (
+    predict_limit, report_limit, default_limit, inference_slot
+)
 
 app = FastAPI(
     title="Explainable Multimodal Deepfake Detection API",
@@ -79,11 +82,16 @@ def health_check():
     }
 
 
-@app.post("/api/predict")
+@app.post("/api/predict", dependencies=[Depends(predict_limit)])
 def analyze_video(
     video: UploadFile = File(...),
     mode: str = Form(MODE_ADVANCED)
 ):
+    with inference_slot():
+        return _analyze_video(video, mode)
+
+
+def _analyze_video(video: UploadFile, mode: str):
     """
     Primary Video Analysis Endpoint.
     Performs multimodal deepfake detection, Grad-CAM heatmap generation,
@@ -167,7 +175,7 @@ def analyze_video(
             temp_video_path.unlink()
 
 
-@app.post("/api/report/pdf")
+@app.post("/api/report/pdf", dependencies=[Depends(report_limit)])
 def generate_pdf(report_data: dict):
     """
     Generates and returns downloadable forensic PDF report.
@@ -201,7 +209,7 @@ def generate_pdf(report_data: dict):
 
 _benchmark_cache: Optional[dict] = None
 
-@app.get("/api/benchmark")
+@app.get("/api/benchmark", dependencies=[Depends(default_limit)])
 def get_benchmark_results():
     """
     Returns quantitative evaluation comparing:

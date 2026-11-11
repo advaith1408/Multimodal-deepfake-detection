@@ -63,32 +63,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalCmImg = document.getElementById("modal-cm-img");
 
   // Mode Selection Handlers
-  modeStandardBtn.addEventListener("click", () => {
-    currentMode = "standard";
-    modeStandardBtn.className = "mode-btn relative p-3 rounded-lg border text-left transition border-brand-500 bg-brand-500/10 ring-1 ring-brand-500";
-    modeAdvancedBtn.className = "mode-btn relative p-3 rounded-lg border text-left transition border-slate-700 bg-slate-800/40 hover:bg-slate-800";
-    modeDesc.textContent = "* Standard Mode: Evaluates spatial CNN artifacts and temporal sequence consistency (Bi-LSTM). Faster inference.";
-  });
-
-  modeAdvancedBtn.addEventListener("click", () => {
-    currentMode = "advanced";
-    modeAdvancedBtn.className = "mode-btn relative p-3 rounded-lg border text-left transition border-brand-500 bg-brand-500/10 ring-1 ring-brand-500";
-    modeStandardBtn.className = "mode-btn relative p-3 rounded-lg border text-left transition border-slate-700 bg-slate-800/40 hover:bg-slate-800";
-    modeDesc.textContent = "* Advanced Mode: Evaluates spatial CNN artifacts, temporal Bi-LSTM consistency, AND subcutaneous hemodynamic pulse coherence (rPPG).";
-  });
+  function setMode(mode) {
+    currentMode = mode;
+    modeStandardBtn.classList.toggle("is-active", mode === "standard");
+    modeAdvancedBtn.classList.toggle("is-active", mode === "advanced");
+    modeDesc.textContent = mode === "standard"
+      ? "Standard mode evaluates spatial CNN artifacts and temporal Bi-LSTM consistency. Faster inference."
+      : "Advanced mode fuses spatial artifacts, temporal inconsistencies and subcutaneous pulse coherence (rPPG).";
+  }
+  modeStandardBtn.addEventListener("click", () => setMode("standard"));
+  modeAdvancedBtn.addEventListener("click", () => setMode("advanced"));
 
   // Dropzone Handlers
   dropzone.addEventListener("click", () => videoInput.click());
+  dropzone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); videoInput.click(); }
+  });
   dropzone.addEventListener("dragover", (e) => {
     e.preventDefault();
-    dropzone.classList.add("border-brand-500", "bg-slate-800/60");
+    dropzone.classList.add("is-over");
   });
   dropzone.addEventListener("dragleave", () => {
-    dropzone.classList.remove("border-brand-500", "bg-slate-800/60");
+    dropzone.classList.remove("is-over");
   });
   dropzone.addEventListener("drop", (e) => {
     e.preventDefault();
-    dropzone.classList.remove("border-brand-500", "bg-slate-800/60");
+    dropzone.classList.remove("is-over");
     if (e.dataTransfer.files.length > 0) {
       setVideoFile(e.dataTransfer.files[0]);
     }
@@ -123,6 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnLoadReal.addEventListener("click", () => loadSampleVideo("/static/samples/sample_real.mp4", "sample_real.mp4"));
   btnLoadFake.addEventListener("click", () => loadSampleVideo("/static/samples/sample_fake.mp4", "sample_fake.mp4"));
+
+  btnLoadDiffusion.addEventListener("click", () => loadSampleVideo("/static/samples/sample_diffusion.mp4", "sample_diffusion.mp4"));
 
   // Primary Forensic Detection Execution
   btnAnalyze.addEventListener("click", async () => {
@@ -166,27 +168,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const isFake = data.prediction === "FAKE";
     const conf = (data.confidence * 100).toFixed(1);
 
-    // Verdict Styling
-    if (isFake) {
-      verdictCard.className = "bg-dark-900 border border-rose-500/40 rounded-xl p-6 shadow-xl relative overflow-hidden ring-1 ring-rose-500/30";
-      verdictIconContainer.className = "p-4 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/30";
-      verdictTitle.textContent = "SYNTHETIC DEEPFAKE DETECTED";
-      verdictTitle.className = "text-3xl font-extrabold tracking-tight mt-1 text-rose-500";
-      confidenceBar.className = "h-full bg-rose-500 transition-all duration-700";
-      verdictIcon.setAttribute("data-lucide", "alert-triangle");
-    } else {
-      verdictCard.className = "bg-dark-900 border border-emerald-500/40 rounded-xl p-6 shadow-xl relative overflow-hidden ring-1 ring-emerald-500/30";
-      verdictIconContainer.className = "p-4 rounded-2xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30";
-      verdictTitle.textContent = "AUTHENTIC HUMAN FACE";
-      verdictTitle.className = "text-3xl font-extrabold tracking-tight mt-1 text-emerald-400";
-      confidenceBar.className = "h-full bg-emerald-500 transition-all duration-700";
-      verdictIcon.setAttribute("data-lucide", "shield-check");
-    }
+    // Verdict styling (state is handled in CSS via data-state)
+    verdictCard.dataset.state = isFake ? "fake" : "real";
+    verdictTitle.textContent = isFake ? "SYNTHETIC DEEPFAKE DETECTED" : "AUTHENTIC HUMAN FACE";
+    verdictIconContainer.innerHTML = `<i id="verdict-icon" data-lucide="${isFake ? "alert-triangle" : "shield-check"}"></i>`;
 
-    verdictModeBadge.textContent = `${data.mode_used.toUpperCase()} MODE`;
-    verdictHash.textContent = `SHA-256: ${data.file_hash || 'N/A'}`;
+    verdictModeBadge.textContent = data.mode_used.toUpperCase();
+    verdictHash.textContent = `SHA-256: ${data.file_hash || "N/A"}`;
     confidencePercentage.textContent = `${conf}%`;
-    confidenceBar.style.width = `${conf}%`;
+    confidenceBar.style.width = "0%";
+    requestAnimationFrame(() => requestAnimationFrame(() => { confidenceBar.style.width = `${conf}%`; }));
 
     probReal.textContent = data.prob_real.toFixed(3);
     probFake.textContent = data.prob_fake.toFixed(3);
@@ -223,13 +214,12 @@ document.addEventListener("DOMContentLoaded", () => {
       rppgHr.textContent = `${r.heart_rate_bpm} BPM`;
       rppgSnr.textContent = `${r.snr_db} dB`;
       rppgCoherence.textContent = r.cross_region_coherence.toFixed(2);
-      rppgCoherence.className = r.cross_region_coherence > 0.4 ? "text-xs font-bold text-emerald-400 font-mono" : "text-xs font-bold text-rose-400 font-mono";
     } else {
       rppgChartDisplay.classList.add("hidden");
       rppgEmpty.classList.remove("hidden");
-      rppgHr.textContent = "N/A";
-      rppgSnr.textContent = "N/A";
-      rppgCoherence.textContent = "N/A";
+      rppgHr.textContent = "—";
+      rppgSnr.textContent = "—";
+      rppgCoherence.textContent = "—";
     }
 
     lucide.createIcons();
@@ -241,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!lastAnalysisResult) return;
 
     btnDownloadPdf.disabled = true;
-    btnDownloadPdf.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-rose-400"></i><span>Building PDF...</span>`;
+    btnDownloadPdf.innerHTML = `<i data-lucide="loader-2" class="spin"></i><span>Building PDF…</span>`;
     lucide.createIcons();
 
     try {
@@ -266,7 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(`PDF Error: ${err.message}`);
     } finally {
       btnDownloadPdf.disabled = false;
-      btnDownloadPdf.innerHTML = `<i data-lucide="file-text" class="w-4 h-4 text-rose-400"></i><span>Download PDF Report</span>`;
+      btnDownloadPdf.innerHTML = `<i data-lucide="file-text"></i><span>PDF report</span>`;
       lucide.createIcons();
     }
   });
