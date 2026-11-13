@@ -16,16 +16,18 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f0f9ff',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              700: '#0369a1',
-            },
-            dark: {
-              800: '#1e293b',
-              900: '#0f172a',
-              950: '#020617',
+            mono: {
+              50: '#fafafa',
+              100: '#f5f5f5',
+              200: '#e5e5e5',
+              300: '#d4d4d4',
+              400: '#a3a3a3',
+              500: '#737373',
+              600: '#525252',
+              700: '#404040',
+              800: '#262626',
+              900: '#171717',
+              950: '#0a0a0a',
             }
           }
         }
@@ -35,37 +37,37 @@
   <style>
     @keyframes pulse-subtle {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.85; }
+      50% { opacity: 0.6; }
     }
     .animate-pulse-subtle {
       animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
   </style>
 </head>
-<body class="bg-dark-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-brand-500 selection:text-white">
+<body class="bg-black text-white min-h-screen font-sans antialiased selection:bg-white selection:text-black">
 
   <!-- Top Navigation Header -->
-  <header class="border-b border-slate-800 bg-dark-900/80 backdrop-blur sticky top-0 z-50">
+  <header class="border-b border-neutral-800 bg-black/90 backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <div class="p-2 bg-brand-500/10 border border-brand-500/30 rounded-lg text-brand-500">
+        <div class="p-2 bg-white text-black border border-white rounded-lg">
           <i data-lucide="shield-alert" class="w-6 h-6"></i>
         </div>
         <div>
-          <h1 class="text-lg font-bold text-slate-100 tracking-tight flex items-center gap-2">
-            VeritasFace <span class="text-xs px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 font-mono">v1.0-forensic</span>
+          <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            VeritasFace <span class="text-xs px-2 py-0.5 rounded-full bg-neutral-900 text-neutral-200 border border-neutral-700 font-mono">v1.0-forensic</span>
           </h1>
-          <p class="text-xs text-slate-400">Explainable Multimodal Deepfake Face Detection (CNN • LSTM • rPPG)</p>
+          <p class="text-xs text-neutral-400">Explainable Multimodal Deepfake Face Detection (CNN • LSTM • rPPG)</p>
         </div>
       </div>
 
       <div class="flex items-center space-x-4">
-        <div class="hidden sm:flex items-center space-x-2 text-xs text-slate-400 bg-slate-800/60 px-3 py-1.5 rounded-full border border-slate-700/60">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div class="hidden sm:flex items-center space-x-2 text-xs text-neutral-300 bg-neutral-950 px-3 py-1.5 rounded-full border border-neutral-800">
+          <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
           <span id="system-device">Engine: EfficientNet-B0 + Bi-LSTM + POS</span>
         </div>
-        <button id="btn-benchmark-modal" class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition border border-slate-700">
-          <i data-lucide="bar-chart-2" class="w-4 h-4 text-brand-400"></i>
+        <button id="btn-benchmark-modal" class="text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-neutral-200 text-black font-medium transition border border-white">
+          <i data-lucide="bar-chart-2" class="w-4 h-4 text-black"></i>
           <span>Benchmark Study</span>
         </button>
       </div>
@@ -79,78 +81,78 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
       
       <!-- Mode Selection Card -->
-      <div class="bg-dark-900 border border-slate-800 rounded-xl p-5 shadow-lg">
+      <div class="bg-neutral-950 border border-neutral-800 rounded-xl p-5 shadow-2xl">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <i data-lucide="sliders" class="w-4 h-4 text-brand-400"></i>
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-white"></i>
             Forensic Inspection Mode
           </h2>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-500/10 text-brand-400">Human-in-the-Loop</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 text-neutral-300 border border-neutral-700">Human-in-the-Loop</span>
         </div>
         
         <div class="grid grid-cols-2 gap-3 mt-4">
           <!-- Standard Mode Button -->
-          <button id="mode-standard" type="button" class="mode-btn relative p-3 rounded-lg border text-left transition border-slate-700 bg-slate-800/40 hover:bg-slate-800">
+          <button id="mode-standard" type="button" class="mode-btn relative p-3 rounded-lg border text-left transition border-neutral-800 bg-black text-neutral-300 hover:border-neutral-600">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-bold text-slate-200">Standard</span>
-              <span class="text-[10px] text-slate-400 font-mono">Fast</span>
+              <span class="text-xs font-bold">Standard</span>
+              <span class="text-[10px] text-neutral-500 font-mono">Fast</span>
             </div>
-            <p class="text-[11px] text-slate-400 leading-snug">Spatial (CNN) + Temporal (LSTM)</p>
+            <p class="text-[11px] text-neutral-400 leading-snug">Spatial (CNN) + Temporal (LSTM)</p>
           </button>
 
           <!-- Advanced Mode Button -->
-          <button id="mode-advanced" type="button" class="mode-btn relative p-3 rounded-lg border text-left transition border-brand-500 bg-brand-500/10 ring-1 ring-brand-500">
+          <button id="mode-advanced" type="button" class="mode-btn relative p-3 rounded-lg border text-left transition border-white bg-white text-black shadow-md">
             <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-bold text-brand-400">Advanced</span>
-              <span class="text-[10px] text-pink-400 font-mono">Forensic</span>
+              <span class="text-xs font-bold">Advanced</span>
+              <span class="text-[10px] text-neutral-600 font-mono font-semibold">Forensic</span>
             </div>
-            <p class="text-[11px] text-slate-300 leading-snug">CNN + LSTM + rPPG Blood Pulse</p>
+            <p class="text-[11px] text-neutral-700 leading-snug">CNN + LSTM + rPPG Blood Pulse</p>
           </button>
         </div>
 
-        <p id="mode-description" class="text-[11px] text-slate-400 mt-3 italic">
+        <p id="mode-description" class="text-[11px] text-neutral-400 mt-3 italic">
           * Advanced Mode fuses spatial artifacts, sequential inconsistencies, and subcutaneous hemodynamic pulse coherence.
         </p>
       </div>
 
       <!-- Video Upload / Sample Selection Card -->
-      <div class="lg:col-span-2 bg-dark-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
+      <div class="lg:col-span-2 bg-neutral-950 border border-neutral-800 rounded-xl p-5 shadow-2xl flex flex-col justify-between">
         <div>
-          <div class="flex items-center justify-between mb-2">
-            <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-              <i data-lucide="video" class="w-4 h-4 text-brand-400"></i>
+          <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+              <i data-lucide="video" class="w-4 h-4 text-white"></i>
               Target Facial Video Input
             </h2>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-400">Quick Test:</span>
-              <button id="btn-load-real" class="text-[11px] px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-neutral-400">Quick Test:</span>
+              <button id="btn-load-real" class="text-[11px] px-2.5 py-1 rounded bg-black hover:bg-white hover:text-black text-neutral-200 border border-neutral-700 transition font-medium">
                 Load Real Sample
               </button>
-              <button id="btn-load-fake" class="text-[11px] px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition">
+              <button id="btn-load-fake" class="text-[11px] px-2.5 py-1 rounded bg-black hover:bg-white hover:text-black text-neutral-200 border border-neutral-700 transition font-medium">
                 Load FaceSwap Sample
               </button>
-              <button id="btn-load-diffusion" class="text-[11px] px-2.5 py-1 rounded bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 transition">
+              <button id="btn-load-diffusion" class="text-[11px] px-2.5 py-1 rounded bg-black hover:bg-white hover:text-black text-neutral-200 border border-neutral-700 transition font-medium">
                 Load Diffusion AI
               </button>
             </div>
           </div>
 
           <!-- Dropzone -->
-          <div id="dropzone" class="mt-3 border-2 border-dashed border-slate-700 hover:border-brand-500 rounded-xl p-6 text-center cursor-pointer transition bg-slate-900/50">
+          <div id="dropzone" class="mt-3 border-2 border-dashed border-neutral-700 hover:border-white rounded-xl p-6 text-center cursor-pointer transition bg-black">
             <input type="file" id="video-input" accept="video/mp4,video/avi,video/quicktime,video/x-matroska" class="hidden" />
             <div class="flex flex-col items-center justify-center space-y-2">
-              <div class="p-3 bg-slate-800 rounded-full text-brand-400">
+              <div class="p-3 bg-neutral-900 border border-neutral-800 rounded-full text-white">
                 <i data-lucide="upload-cloud" class="w-6 h-6"></i>
               </div>
-              <p class="text-xs text-slate-200 font-medium">Click or Drag & Drop Facial Video (.mp4, .avi, .mov)</p>
-              <p id="selected-file-label" class="text-[11px] text-slate-500">Supports FaceForensics++ benchmark & custom footage (Max 50MB)</p>
+              <p class="text-xs text-white font-medium">Click or Drag & Drop Facial Video (.mp4, .avi, .mov)</p>
+              <p id="selected-file-label" class="text-[11px] text-neutral-500">Supports FaceForensics++ benchmark & custom footage (Max 50MB)</p>
             </div>
           </div>
         </div>
 
         <div class="mt-4 flex items-center justify-between">
-          <span id="upload-status" class="text-xs text-slate-400 italic">No video analyzed yet.</span>
-          <button id="btn-analyze" disabled class="px-5 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium text-xs flex items-center gap-2 shadow-lg shadow-brand-600/20 transition">
+          <span id="upload-status" class="text-xs text-neutral-400 italic">No video analyzed yet.</span>
+          <button id="btn-analyze" disabled class="px-5 py-2 rounded-lg bg-white hover:bg-neutral-200 disabled:bg-neutral-900 disabled:text-neutral-600 disabled:border-neutral-800 disabled:cursor-not-allowed text-black border border-white font-semibold text-xs flex items-center gap-2 shadow-lg transition">
             <i data-lucide="cpu" class="w-4 h-4"></i>
             <span>Run Forensic Detection</span>
           </button>
@@ -160,12 +162,12 @@
     </div>
 
     <!-- Loading Skeleton Indicator -->
-    <div id="loading-indicator" class="hidden mb-8 bg-dark-900 border border-brand-500/30 rounded-xl p-6 shadow-xl text-center">
-      <div class="inline-block animate-spin text-brand-500 mb-3">
+    <div id="loading-indicator" class="hidden mb-8 bg-neutral-950 border border-neutral-700 rounded-xl p-6 shadow-2xl text-center">
+      <div class="inline-block animate-spin text-white mb-3">
         <i data-lucide="loader-2" class="w-8 h-8"></i>
       </div>
-      <h3 class="text-sm font-semibold text-slate-200">Executing Tri-Modal Forensic Pipeline...</h3>
-      <p class="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+      <h3 class="text-sm font-semibold text-white">Executing Tri-Modal Forensic Pipeline...</h3>
+      <p class="text-xs text-neutral-400 mt-1 max-w-md mx-auto">
         Extracting facial ROIs, computing CNN feature maps, analyzing Bi-LSTM temporal attention, and tracking hemodynamic rPPG pulse waves...
       </p>
     </div>
@@ -174,57 +176,57 @@
     <div id="results-container" class="hidden space-y-6">
 
       <!-- Verdict Banner -->
-      <div id="verdict-card" class="bg-dark-900 border rounded-xl p-6 shadow-xl relative overflow-hidden">
+      <div id="verdict-card" class="bg-neutral-950 border border-white rounded-xl p-6 shadow-2xl relative overflow-hidden">
         <div class="flex flex-col md:flex-row items-center justify-between gap-6">
           
           <!-- Verdict Label -->
           <div class="flex items-center space-x-5">
-            <div id="verdict-icon-container" class="p-4 rounded-2xl">
+            <div id="verdict-icon-container" class="p-4 rounded-2xl bg-white text-black border border-white">
               <i id="verdict-icon" data-lucide="shield-check" class="w-10 h-10"></i>
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xs uppercase font-mono tracking-wider text-slate-400">Primary Forensic Verdict</span>
-                <span id="verdict-mode-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">ADVANCED MODE</span>
+                <span class="text-xs uppercase font-mono tracking-wider text-neutral-400">Primary Forensic Verdict</span>
+                <span id="verdict-mode-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-neutral-900 text-white border border-neutral-700">ADVANCED MODE</span>
               </div>
-              <h2 id="verdict-title" class="text-3xl font-extrabold tracking-tight mt-1">REAL HUMAN FACE</h2>
-              <p id="verdict-hash" class="text-xs text-slate-500 font-mono mt-0.5">SHA-256: 00000000000000000000000000000000</p>
+              <h2 id="verdict-title" class="text-3xl font-extrabold tracking-tight mt-1 text-white">REAL HUMAN FACE</h2>
+              <p id="verdict-hash" class="text-xs text-neutral-500 font-mono mt-0.5">SHA-256: 00000000000000000000000000000000</p>
             </div>
           </div>
 
           <!-- Confidence & Probabilities Gauges -->
           <div class="flex items-center space-x-8">
             <div class="text-center">
-              <p class="text-xs text-slate-400 font-medium">Confidence Score</p>
-              <p id="confidence-percentage" class="text-2xl font-black text-slate-100 mt-0.5">98.5%</p>
-              <div class="w-28 bg-slate-800 h-2 rounded-full mt-1.5 overflow-hidden">
-                <div id="confidence-bar" class="h-full bg-brand-500 transition-all duration-700" style="width: 98%;"></div>
+              <p class="text-xs text-neutral-400 font-medium">Confidence Score</p>
+              <p id="confidence-percentage" class="text-2xl font-black text-white mt-0.5">98.5%</p>
+              <div class="w-28 bg-neutral-800 h-2 rounded-full mt-1.5 overflow-hidden border border-neutral-700">
+                <div id="confidence-bar" class="h-full bg-white transition-all duration-700" style="width: 98%;"></div>
               </div>
             </div>
 
-            <div class="border-l border-slate-800 pl-8 space-y-1 text-xs">
+            <div class="border-l border-neutral-800 pl-8 space-y-1 text-xs">
               <div class="flex justify-between gap-4">
-                <span class="text-slate-400">Real Prob:</span>
-                <span id="prob-real" class="font-mono font-bold text-emerald-400">0.985</span>
+                <span class="text-neutral-400">Real Prob:</span>
+                <span id="prob-real" class="font-mono font-bold text-white">0.985</span>
               </div>
               <div class="flex justify-between gap-4">
-                <span class="text-slate-400">Fake Prob:</span>
-                <span id="prob-fake" class="font-mono font-bold text-rose-400">0.015</span>
+                <span class="text-neutral-400">Fake Prob:</span>
+                <span id="prob-fake" class="font-mono font-bold text-neutral-300">0.015</span>
               </div>
               <div class="flex justify-between gap-4">
-                <span class="text-slate-400">Modality Gate (ST):</span>
-                <span id="modality-gate" class="font-mono text-brand-400">0.72</span>
+                <span class="text-neutral-400">Modality Gate (ST):</span>
+                <span id="modality-gate" class="font-mono text-neutral-200">0.72</span>
               </div>
             </div>
 
             <!-- Report Download Buttons -->
-            <div class="border-l border-slate-800 pl-8 flex flex-col gap-2">
-              <button id="btn-download-pdf" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-2 border border-slate-700 transition">
-                <i data-lucide="file-text" class="w-4 h-4 text-rose-400"></i>
+            <div class="border-l border-neutral-800 pl-8 flex flex-col gap-2">
+              <button id="btn-download-pdf" class="px-4 py-2 bg-white hover:bg-neutral-200 text-black rounded-lg text-xs font-semibold flex items-center gap-2 border border-white transition">
+                <i data-lucide="file-text" class="w-4 h-4 text-black"></i>
                 <span>Download PDF Report</span>
               </button>
-              <button id="btn-download-json" class="px-4 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 text-slate-300 rounded-lg text-[11px] font-mono flex items-center justify-center gap-1.5 border border-slate-700/60 transition">
-                <i data-lucide="code" class="w-3.5 h-3.5 text-brand-400"></i>
+              <button id="btn-download-json" class="px-4 py-1.5 bg-black hover:bg-neutral-900 text-neutral-200 rounded-lg text-[11px] font-mono flex items-center justify-center gap-1.5 border border-neutral-700 transition">
+                <i data-lucide="code" class="w-3.5 h-3.5 text-white"></i>
                 <span>Export JSON Audit</span>
               </button>
             </div>
@@ -238,85 +240,85 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Column 1: Spatial Explainability (Grad-CAM) -->
-        <div class="bg-dark-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
+        <div class="bg-neutral-950 border border-neutral-800 rounded-xl p-5 shadow-2xl flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                <i data-lucide="eye" class="w-4 h-4 text-brand-400"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <i data-lucide="eye" class="w-4 h-4 text-white"></i>
                 Spatial Grad-CAM Heatmap
               </h3>
-              <span class="text-[10px] text-slate-400 font-mono">EfficientNet Conv8</span>
+              <span class="text-[10px] text-neutral-400 font-mono">EfficientNet Conv8</span>
             </div>
-            <p class="text-[11px] text-slate-400 leading-snug mb-3">
+            <p class="text-[11px] text-neutral-400 leading-snug mb-3">
               Pixel attribution highlights facial regions with synthesis warping, blending seams, or sensor noise discrepancies.
             </p>
-            <div class="relative rounded-lg overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center aspect-square">
+            <div class="relative rounded-lg overflow-hidden border border-neutral-800 bg-black flex items-center justify-center aspect-square">
               <img id="gradcam-display" src="" alt="Grad-CAM Heatmap" class="object-cover w-full h-full" />
-              <div id="gradcam-empty" class="text-xs text-slate-600">No Heatmap Generated</div>
+              <div id="gradcam-empty" class="text-xs text-neutral-600">No Heatmap Generated</div>
             </div>
           </div>
-          <div class="mt-3 text-[11px] text-slate-400 flex items-center justify-between">
-            <span>Focus Target: <strong id="cam-target-label" class="text-slate-200">Peak Anomaly Frame</strong></span>
-            <span class="text-slate-500 font-mono">JET Colormap</span>
+          <div class="mt-3 text-[11px] text-neutral-400 flex items-center justify-between">
+            <span>Focus Target: <strong id="cam-target-label" class="text-white">Peak Anomaly Frame</strong></span>
+            <span class="text-neutral-500 font-mono">JET Colormap</span>
           </div>
         </div>
 
         <!-- Column 2: Temporal Anomaly (LSTM Attention) -->
-        <div class="bg-dark-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
+        <div class="bg-neutral-950 border border-neutral-800 rounded-xl p-5 shadow-2xl flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                <i data-lucide="activity" class="w-4 h-4 text-indigo-400"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <i data-lucide="activity" class="w-4 h-4 text-white"></i>
                 Temporal Sequence Attention
               </h3>
-              <span class="text-[10px] text-slate-400 font-mono">Bi-LSTM 2-Layer</span>
+              <span class="text-[10px] text-neutral-400 font-mono">Bi-LSTM 2-Layer</span>
             </div>
-            <p class="text-[11px] text-slate-400 leading-snug mb-3">
+            <p class="text-[11px] text-neutral-400 leading-snug mb-3">
               Attention weights over consecutive sampled frames. Identifies abrupt temporal jitter, blinking flaws, and mouth artifacts.
             </p>
-            <div class="relative rounded-lg overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center aspect-square p-2">
+            <div class="relative rounded-lg overflow-hidden border border-neutral-800 bg-black flex items-center justify-center aspect-square p-2">
               <img id="attention-chart-display" src="" alt="Attention Weights Chart" class="object-contain w-full h-full" />
-              <div id="attention-empty" class="text-xs text-slate-600">No Temporal Sequence Data</div>
+              <div id="attention-empty" class="text-xs text-neutral-600">No Temporal Sequence Data</div>
             </div>
           </div>
-          <div class="mt-3 text-[11px] text-slate-400 flex items-center justify-between">
-            <span>Peak Glitch Frame: <strong id="peak-frame-label" class="text-indigo-300">Frame #4</strong></span>
-            <span class="text-slate-500 font-mono">Softmax Attention</span>
+          <div class="mt-3 text-[11px] text-neutral-400 flex items-center justify-between">
+            <span>Peak Glitch Frame: <strong id="peak-frame-label" class="text-white">Frame #4</strong></span>
+            <span class="text-neutral-500 font-mono">Softmax Attention</span>
           </div>
         </div>
 
         <!-- Column 3: Physiological Liveness (rPPG Waveform & Spectrum) -->
-        <div class="bg-dark-900 border border-slate-800 rounded-xl p-5 shadow-lg flex flex-col justify-between">
+        <div class="bg-neutral-950 border border-neutral-800 rounded-xl p-5 shadow-2xl flex flex-col justify-between">
           <div>
             <div class="flex items-center justify-between mb-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                <i data-lucide="heart-pulse" class="w-4 h-4 text-pink-400"></i>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <i data-lucide="heart-pulse" class="w-4 h-4 text-white"></i>
                 Physiological rPPG Integrity
               </h3>
-              <span class="text-[10px] text-slate-400 font-mono">POS / Welch PSD</span>
+              <span class="text-[10px] text-neutral-400 font-mono">POS / Welch PSD</span>
             </div>
-            <p class="text-[11px] text-slate-400 leading-snug mb-3">
+            <p class="text-[11px] text-neutral-400 leading-snug mb-3">
               Subcutaneous hemodynamic Blood Volume Pulse (BVP) and multi-region synchronicity (Forehead vs Cheeks).
             </p>
-            <div class="relative rounded-lg overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center aspect-square p-2">
+            <div class="relative rounded-lg overflow-hidden border border-neutral-800 bg-black flex items-center justify-center aspect-square p-2">
               <img id="rppg-chart-display" src="" alt="rPPG Spectrum Chart" class="object-contain w-full h-full" />
-              <div id="rppg-empty" class="text-xs text-slate-600">Standard Mode (rPPG Disabled)</div>
+              <div id="rppg-empty" class="text-xs text-neutral-600">Standard Mode (rPPG Disabled)</div>
             </div>
           </div>
           
           <!-- rPPG Metrics Grid -->
-          <div class="mt-3 pt-3 border-t border-slate-800 grid grid-cols-3 gap-2 text-center">
-            <div class="bg-slate-800/40 p-1.5 rounded">
-              <p class="text-[10px] text-slate-400">Heart Rate</p>
-              <p id="rppg-hr" class="text-xs font-bold text-pink-400 font-mono">-- BPM</p>
+          <div class="mt-3 pt-3 border-t border-neutral-800 grid grid-cols-3 gap-2 text-center">
+            <div class="bg-black border border-neutral-800 p-1.5 rounded">
+              <p class="text-[10px] text-neutral-400">Heart Rate</p>
+              <p id="rppg-hr" class="text-xs font-bold text-white font-mono">-- BPM</p>
             </div>
-            <div class="bg-slate-800/40 p-1.5 rounded">
-              <p class="text-[10px] text-slate-400">Pulse SNR</p>
-              <p id="rppg-snr" class="text-xs font-bold text-slate-200 font-mono">-- dB</p>
+            <div class="bg-black border border-neutral-800 p-1.5 rounded">
+              <p class="text-[10px] text-neutral-400">Pulse SNR</p>
+              <p id="rppg-snr" class="text-xs font-bold text-white font-mono">-- dB</p>
             </div>
-            <div class="bg-slate-800/40 p-1.5 rounded">
-              <p class="text-[10px] text-slate-400">Coherence (r)</p>
-              <p id="rppg-coherence" class="text-xs font-bold text-emerald-400 font-mono">--</p>
+            <div class="bg-black border border-neutral-800 p-1.5 rounded">
+              <p class="text-[10px] text-neutral-400">Coherence (r)</p>
+              <p id="rppg-coherence" class="text-xs font-bold text-white font-mono">--</p>
             </div>
           </div>
         </div>
@@ -328,25 +330,25 @@
   </main>
 
   <!-- Benchmark Comparison Modal -->
-  <div id="benchmark-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-dark-900 border border-slate-800 rounded-2xl max-w-4xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+  <div id="benchmark-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-neutral-950 border border-neutral-700 rounded-2xl max-w-4xl w-full p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-neutral-800 pb-4 mb-4">
         <div>
-          <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <i data-lucide="award" class="w-5 h-5 text-brand-400"></i>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i data-lucide="award" class="w-5 h-5 text-white"></i>
             Comparative Evaluation Study (FaceForensics++ C23)
           </h2>
-          <p class="text-xs text-slate-400 mt-0.5">Quantitative ablation comparing CNN, CNN+LSTM, and CNN+LSTM+rPPG Multimodal Fusion</p>
+          <p class="text-xs text-neutral-400 mt-0.5">Quantitative ablation comparing CNN, CNN+LSTM, and CNN+LSTM+rPPG Multimodal Fusion</p>
         </div>
-        <button id="btn-close-modal" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition">
+        <button id="btn-close-modal" class="p-2 rounded-lg bg-black border border-neutral-800 text-neutral-400 hover:text-white hover:border-white transition">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
       <!-- Comparative Table -->
-      <div class="overflow-x-auto rounded-lg border border-slate-800 mb-6">
-        <table class="w-full text-left text-xs text-slate-300">
-          <thead class="bg-slate-800/60 text-slate-400 uppercase font-mono text-[10px]">
+      <div class="overflow-x-auto rounded-lg border border-neutral-800 mb-6">
+        <table class="w-full text-left text-xs text-neutral-300">
+          <thead class="bg-black text-neutral-400 uppercase font-mono text-[10px] border-b border-neutral-800">
             <tr>
               <th class="py-3 px-4">Architecture</th>
               <th class="py-3 px-4">Accuracy</th>
@@ -356,30 +358,30 @@
               <th class="py-3 px-4">ROC-AUC</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-800">
-            <tr class="hover:bg-slate-800/30">
-              <td class="py-3 px-4 font-semibold text-slate-400">1. CNN Only (EfficientNet-B0)</td>
+          <tbody class="divide-y divide-neutral-800">
+            <tr class="hover:bg-neutral-900/50">
+              <td class="py-3 px-4 font-semibold text-neutral-400">1. CNN Only (EfficientNet-B0)</td>
               <td class="py-3 px-4 font-mono">88.4%</td>
               <td class="py-3 px-4 font-mono">87.1%</td>
               <td class="py-3 px-4 font-mono">89.2%</td>
               <td class="py-3 px-4 font-mono">88.1%</td>
               <td class="py-3 px-4 font-mono">0.932</td>
             </tr>
-            <tr class="hover:bg-slate-800/30">
-              <td class="py-3 px-4 font-semibold text-sky-400">2. CNN + LSTM (Standard Mode)</td>
+            <tr class="hover:bg-neutral-900/50">
+              <td class="py-3 px-4 font-semibold text-neutral-200">2. CNN + LSTM (Standard Mode)</td>
               <td class="py-3 px-4 font-mono">94.2%</td>
               <td class="py-3 px-4 font-mono">93.5%</td>
               <td class="py-3 px-4 font-mono">95.0%</td>
               <td class="py-3 px-4 font-mono">94.2%</td>
               <td class="py-3 px-4 font-mono">0.976</td>
             </tr>
-            <tr class="bg-brand-500/10 font-bold hover:bg-brand-500/15">
-              <td class="py-3 px-4 text-brand-400">3. CNN + LSTM + rPPG (Advanced Mode)</td>
-              <td class="py-3 px-4 font-mono text-emerald-400">97.8%</td>
-              <td class="py-3 px-4 font-mono text-emerald-400">97.5%</td>
-              <td class="py-3 px-4 font-mono text-emerald-400">98.2%</td>
-              <td class="py-3 px-4 font-mono text-emerald-400">97.8%</td>
-              <td class="py-3 px-4 font-mono text-emerald-400">0.994</td>
+            <tr class="bg-white text-black font-bold">
+              <td class="py-3 px-4">3. CNN + LSTM + rPPG (Advanced Mode)</td>
+              <td class="py-3 px-4 font-mono">97.8%</td>
+              <td class="py-3 px-4 font-mono">97.5%</td>
+              <td class="py-3 px-4 font-mono">98.2%</td>
+              <td class="py-3 px-4 font-mono">97.8%</td>
+              <td class="py-3 px-4 font-mono">0.994</td>
             </tr>
           </tbody>
         </table>
@@ -387,12 +389,12 @@
 
       <!-- Charts Row -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-dark-950 p-4 rounded-xl border border-slate-800 text-center">
-          <h4 class="text-xs font-semibold text-slate-300 mb-2">Receiver Operating Characteristic (ROC) Curves</h4>
+        <div class="bg-black p-4 rounded-xl border border-neutral-800 text-center">
+          <h4 class="text-xs font-semibold text-neutral-300 mb-2">Receiver Operating Characteristic (ROC) Curves</h4>
           <img id="modal-roc-img" src="" alt="ROC Curve" class="w-full rounded-lg object-contain h-64" />
         </div>
-        <div class="bg-dark-950 p-4 rounded-xl border border-slate-800 text-center">
-          <h4 class="text-xs font-semibold text-slate-300 mb-2">Confusion Matrix (Advanced Multimodal)</h4>
+        <div class="bg-black p-4 rounded-xl border border-neutral-800 text-center">
+          <h4 class="text-xs font-semibold text-neutral-300 mb-2">Confusion Matrix (Advanced Multimodal)</h4>
           <img id="modal-cm-img" src="" alt="Confusion Matrix" class="w-full rounded-lg object-contain h-64" />
         </div>
       </div>

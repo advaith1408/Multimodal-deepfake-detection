@@ -6,8 +6,9 @@ Calculates Accuracy, Precision, Recall, F1, ROC-AUC, and Confusion Matrix.
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from typing import Dict, List, Any, Tuple
+import matplotlib.cm as cm
+from matplotlib.figure import Figure
+from typing import Dict, List, Any
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, confusion_matrix, roc_curve
@@ -39,7 +40,7 @@ class ModelEvaluator:
         except Exception:
             auc = 0.5
 
-        cm = confusion_matrix(y_true, y_pred).tolist()
+        cm_list = confusion_matrix(y_true, y_pred).tolist()
 
         return {
             "accuracy": acc,
@@ -47,7 +48,7 @@ class ModelEvaluator:
             "recall": rec,
             "f1_score": f1,
             "roc_auc": auc,
-            "confusion_matrix": cm
+            "confusion_matrix": cm_list
         }
 
     @classmethod
@@ -56,23 +57,19 @@ class ModelEvaluator:
         eval_dict: Dict[str, Dict[str, np.ndarray]]
     ) -> str:
         """
-        Plots ROC Curves comparing the 3 configurations.
-        eval_dict format:
-        {
-           'CNN Only': {'y_true': [...], 'y_prob': [...]},
-           'CNN + LSTM': {'y_true': [...], 'y_prob': [...]},
-           'CNN + LSTM + rPPG': {'y_true': [...], 'y_prob': [...]}
-        }
+        Plots ROC Curves comparing the 3 configurations using thread-safe Figure API
+        in a monochrome Black & White theme.
         Returns: base64-encoded PNG image string.
         """
-        fig, ax = plt.subplots(figsize=(7, 5), dpi=100)
-        fig.patch.set_facecolor('#0f172a')
-        ax.set_facecolor('#1e293b')
+        fig = Figure(figsize=(7, 5), dpi=110)
+        fig.patch.set_facecolor('#000000')
+        ax = fig.add_subplot(111)
+        ax.set_facecolor('#0a0a0a')
 
-        colors_map = {
-            'CNN Only': '#94a3b8',
-            'CNN + LSTM (Standard)': '#38bdf8',
-            'CNN + LSTM + rPPG (Advanced)': '#ec4899'
+        styles_map = {
+            'CNN Only': {'color': '#737373', 'linestyle': ':', 'linewidth': 1.8},
+            'CNN + LSTM (Standard)': {'color': '#bcbcbc', 'linestyle': '--', 'linewidth': 2.0},
+            'CNN + LSTM + rPPG (Advanced)': {'color': '#ffffff', 'linestyle': '-', 'linewidth': 2.6}
         }
 
         for name, data in eval_dict.items():
@@ -81,62 +78,74 @@ class ModelEvaluator:
             try:
                 fpr, tpr, _ = roc_curve(y_t, y_p)
                 auc_val = roc_auc_score(y_t, y_p)
-                color = colors_map.get(name, '#6366f1')
-                ax.plot(fpr, tpr, color=color, linewidth=2.2, label=f"{name} (AUC = {auc_val:.3f})")
+                st = styles_map.get(name, {'color': '#ffffff', 'linestyle': '-', 'linewidth': 2.0})
+                ax.plot(
+                    fpr, tpr,
+                    color=st['color'],
+                    linestyle=st['linestyle'],
+                    linewidth=st['linewidth'],
+                    label=f"{name} (AUC = {auc_val:.3f})"
+                )
             except Exception:
                 continue
 
         # Diagonal chance line
-        ax.plot([0, 1], [0, 1], linestyle='--', color='#475569', label='Random Guess (AUC = 0.500)')
-        ax.set_title("Comparative ROC Curves (FaceForensics++ Evaluation)", color='#f8fafc', fontsize=12, fontweight='bold')
-        ax.set_xlabel("False Positive Rate", color='#94a3b8', fontsize=10)
-        ax.set_ylabel("True Positive Rate", color='#94a3b8', fontsize=10)
-        ax.tick_params(colors='#94a3b8', labelsize=9)
-        ax.grid(True, linestyle='--', alpha=0.25, color='#64748b')
-        ax.legend(loc="lower right", facecolor='#1e293b', edgecolor='#334155', labelcolor='#e2e8f0', fontsize=9)
+        ax.plot([0, 1], [0, 1], linestyle='-.', color='#404040', linewidth=1.2, label='Random Guess (AUC = 0.500)')
+        ax.set_title("Comparative ROC Curves (FaceForensics++ Evaluation)", color='#ffffff', fontsize=11, fontweight='bold', pad=10)
+        ax.set_xlabel("False Positive Rate", color='#a3a3a3', fontsize=10)
+        ax.set_ylabel("True Positive Rate", color='#a3a3a3', fontsize=10)
+        ax.tick_params(colors='#a3a3a3', labelsize=9)
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#262626')
+        ax.grid(True, linestyle='--', alpha=0.25, color='#525252')
+        ax.legend(loc="lower right", facecolor='#0a0a0a', edgecolor='#404040', labelcolor='#e5e5e5', fontsize=8.5)
 
-        plt.tight_layout()
+        fig.tight_layout()
         buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight", facecolor=fig.get_facecolor())
-        plt.close(fig)
+        fig.savefig(buf, format="png", bbox_inches="tight", facecolor=fig.get_facecolor())
         buf.seek(0)
         return f"data:image/png;base64,{base64.b64encode(buf.read()).decode('utf-8')}"
 
     @classmethod
-    def plot_confusion_matrix(cls, cm: List[List[int]], title: str = "Confusion Matrix") -> str:
+    def plot_confusion_matrix(cls, cm_data: List[List[int]], title: str = "Confusion Matrix") -> str:
         """
-        Renders confusion matrix graphic.
+        Renders confusion matrix graphic using thread-safe Figure API in Black & White.
         """
-        fig, ax = plt.subplots(figsize=(4.5, 4), dpi=100)
-        fig.patch.set_facecolor('#0f172a')
-        ax.set_facecolor('#1e293b')
+        fig = Figure(figsize=(4.8, 4.2), dpi=110)
+        fig.patch.set_facecolor('#000000')
+        ax = fig.add_subplot(111)
+        ax.set_facecolor('#0a0a0a')
 
-        cm_arr = np.array(cm)
-        im = ax.imshow(cm_arr, interpolation='nearest', cmap=plt.cm.Blues)
-        ax.set_title(title, color='#f8fafc', fontsize=11, fontweight='bold')
+        cm_arr = np.array(cm_data)
+        ax.imshow(cm_arr, interpolation='nearest', cmap=cm.Greys_r)
+        ax.set_title(title, color='#ffffff', fontsize=11, fontweight='bold', pad=10)
 
         classes = ['REAL (0)', 'FAKE (1)']
         tick_marks = np.arange(len(classes))
         ax.set_xticks(tick_marks)
-        ax.set_xticklabels(classes, color='#94a3b8', fontsize=9)
+        ax.set_xticklabels(classes, color='#a3a3a3', fontsize=9)
         ax.set_yticks(tick_marks)
-        ax.set_yticklabels(classes, color='#94a3b8', fontsize=9)
+        ax.set_yticklabels(classes, color='#a3a3a3', fontsize=9)
+        for spine in ax.spines.values():
+            spine.set_edgecolor('#404040')
 
         # Labels inside cells
         thresh = cm_arr.max() / 2.0
         for i in range(cm_arr.shape[0]):
             for j in range(cm_arr.shape[1]):
-                ax.text(j, i, format(cm_arr[i, j], 'd'),
-                        horizontalalignment="center",
-                        color="white" if cm_arr[i, j] > thresh else "#cbd5e1",
-                        fontsize=12, fontweight='bold')
+                ax.text(
+                    j, i, format(cm_arr[i, j], 'd'),
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    color="#000000" if cm_arr[i, j] > thresh else "#ffffff",
+                    fontsize=13, fontweight='bold'
+                )
 
-        ax.set_ylabel('True Forensic Label', color='#94a3b8', fontsize=10)
-        ax.set_xlabel('Predicted Label', color='#94a3b8', fontsize=10)
-        plt.tight_layout()
+        ax.set_ylabel('True Forensic Label', color='#a3a3a3', fontsize=10)
+        ax.set_xlabel('Predicted Label', color='#a3a3a3', fontsize=10)
+        fig.tight_layout()
 
         buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight", facecolor=fig.get_facecolor())
-        plt.close(fig)
+        fig.savefig(buf, format="png", bbox_inches="tight", facecolor=fig.get_facecolor())
         buf.seek(0)
         return f"data:image/png;base64,{base64.b64encode(buf.read()).decode('utf-8')}"
